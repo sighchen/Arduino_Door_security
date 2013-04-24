@@ -1,4 +1,5 @@
 #include <Keypad.h>
+#include <Timer.h>
 #include <LiquidCrystal.h>
 #include <pitches.h>
 LiquidCrystal lcd(31,33,35,37,39,41);
@@ -21,26 +22,30 @@ unsigned int EchoPin = 4;           // connect Pin 2(Arduino digital io) to Echo
 unsigned int TrigPin = 5;           // connect Pin 3(Arduino digital io) to Trig/TX at US-100
 unsigned long Time_Echo_us = 0;
 unsigned long Len_mm  = 0;
+Timer t2;
+int counting;
+
 void setup(){
+  pinMode(3,OUTPUT);
+  t2.oscillate(3,1000,HIGH);
   pinMode(EchoPin, INPUT);                    //Set EchoPin as input, to receive measure result from US-100
   pinMode(TrigPin, OUTPUT);                   //Set TrigPin as output, used to send high pusle to trig measurement (>10us)
   lcd.begin(16,2);
   lcd.noAutoscroll();
   Serial.begin(9600);
   lcd.setCursor(0,0);
- 
   Serial.print("Set the password ");
   cusomKeypad.setDebounceTime(20);
-
+  counting=0;
 }
   
 void loop(){ 
-  ultrasonic();
-  readKeypad();
+  
+Start:   ultrasonic();
+        readKeypad();
 
 }
 void readKeypad(){
-  
   char key = cusomKeypad.getKey();
   if (key != NO_KEY)
   {
@@ -58,6 +63,18 @@ void readKeypad(){
       attempt[z]=key;
       z++;    }
   }
+  else{
+    t2.update();
+    counting++;
+    
+    if(counting==10){
+      
+      Serial.println("++");
+      Serial.println(counting);
+     // break;*/
+      
+  }
+}
 }
 void ultrasonic(){
   while(v==1){
@@ -103,8 +120,11 @@ void correctPIN() // do this if correct PIN entered
 {
   lcd.print("* Correct PIN *");
   delay(1000);
+  v++;
+  z=0;
+  char attempt[6]={0,0,0,0,0,0};
   lcd.clear();
-  lcd.print("  Enter PIN...");
+ // lcd.print("  Enter PIN...");
 }
 
 void incorrectPIN() // do this if incorrect PIN entered
